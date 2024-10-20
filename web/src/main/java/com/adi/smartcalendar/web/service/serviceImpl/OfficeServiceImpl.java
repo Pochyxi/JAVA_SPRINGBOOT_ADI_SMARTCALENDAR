@@ -1,14 +1,13 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-import com.axcent.DTO.OfficeDTO;
-import com.axcent.entity.Office;
-import com.axcent.entity.Reservation;
-import com.axcent.exception.EntityErrorCodeList;
-import com.axcent.repository.OfficeRepository;
-import com.axcent.repository.ReservationRepository;
-import com.axcent.security.exception.ErrorCodeList;
-import com.axcent.security.exception.SmartAxcentException;
-import com.axcent.service.OfficeService;
+import com.adi.smartcalendar.security.exception.ErrorCodeList;
+import com.adi.smartcalendar.security.exception.appException;
+import com.adi.smartcalendar.web.dto.OfficeDTO;
+import com.adi.smartcalendar.web.entity.Office;
+import com.adi.smartcalendar.web.entity.Reservation;
+import com.adi.smartcalendar.web.repository.OfficeRepository;
+import com.adi.smartcalendar.web.repository.ReservationRepository;
+import com.adi.smartcalendar.web.service.service.OfficeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,12 +26,12 @@ public class OfficeServiceImpl implements OfficeService {
 
     //VOID RETURNS
     @Override
-    public void createOffice(OfficeDTO officeDTO) {
+    public void createOffice( OfficeDTO officeDTO) {
 
         Office officeFound = getOfficeByAddress(officeDTO.getAddress());
 
         if (officeFound != null ){
-            throw new SmartAxcentException(HttpStatus.BAD_REQUEST,"OFFICE "+EntityErrorCodeList.ALREADY_EXISTS);
+            throw new appException(HttpStatus.BAD_REQUEST,"OFFICE "+ ErrorCodeList.ALREADY_EXISTS);
         }
 
 
@@ -51,7 +50,7 @@ public class OfficeServiceImpl implements OfficeService {
     public void deleteOffice(Long id) {
 
         Office officeToDelete = getOfficeById(id)
-                .orElseThrow(()->  new SmartAxcentException(HttpStatus.BAD_REQUEST,"OFFICE "+ErrorCodeList.NF404));
+                .orElseThrow(()->  new appException(HttpStatus.BAD_REQUEST,"OFFICE "+ErrorCodeList.NF404));
 
         Set<Reservation> reservationSet = reservationRepository.findByOfficeId(id);
         for(Reservation reservation : reservationSet){
@@ -64,7 +63,7 @@ public class OfficeServiceImpl implements OfficeService {
 
     @Override
     public void modifyOffice(Long id, OfficeDTO oDTO) {
-        Office office = getOfficeById(id).orElseThrow(()->   new SmartAxcentException(HttpStatus.BAD_REQUEST,"OFFICE "+ ErrorCodeList.NF404));
+        Office office = getOfficeById(id).orElseThrow(()->   new appException(HttpStatus.BAD_REQUEST,"OFFICE " + ErrorCodeList.NF404));
 
         setOfficePropertiesFromDTO(office, oDTO);
 
@@ -87,7 +86,7 @@ public class OfficeServiceImpl implements OfficeService {
     //OFFICEDTO RETURNS
     @Override
     public OfficeDTO getOfficeDTOById(Long id) {
-        Office office = getOfficeById(id).orElseThrow(()-> new SmartAxcentException(HttpStatus.BAD_REQUEST,"OFFICE "+ ErrorCodeList.NF404));
+        Office office = getOfficeById(id).orElseThrow(()-> new appException(HttpStatus.BAD_REQUEST,"OFFICE "+ ErrorCodeList.NF404));
 
         return mapOfficeToDTO(office);
     }

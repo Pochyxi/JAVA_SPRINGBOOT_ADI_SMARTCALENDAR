@@ -196,6 +196,24 @@ public class UserApiServiceImpl implements UserApiService {
                 .bodyToMono( Void.class );
     }
 
+    @Override
+    public Mono<UserDTO> createUser( SignupDTO signupDTO ) {
+        return webClient.post()
+                .uri( BASE_URI + "/create" )
+                .bodyValue( signupDTO )
+                .retrieve()
+                .onStatus( status -> status.is4xxClientError() || status.is5xxServerError(), this::handleError )
+                .bodyToMono( UserDTO.class );
+    }
+
+    @Override
+    public Mono<UserDTO> findByEmail( String email ) {
+        return webClient.get()
+                .uri( BASE_URI + "/email/{email}", email )
+                .retrieve()
+                .onStatus( status -> status.is4xxClientError() || status.is5xxServerError(), this::handleError )
+                .bodyToMono( UserDTO.class );
+    }
 
     private Mono<? extends Throwable> handleError( ClientResponse clientResponse) {
         return clientResponse.bodyToMono( ErrorDetailsDTO.class)

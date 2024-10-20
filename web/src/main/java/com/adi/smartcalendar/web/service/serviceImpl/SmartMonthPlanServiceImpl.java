@@ -1,15 +1,13 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-import com.axcent.DTO.*;
-import com.axcent.DTO.smartPlanDTOs.CalendarProjectDTO;
-import com.axcent.DTO.smartPlanDTOs.EmployeeReservationDTO;
-import com.axcent.DTO.smartPlanDTOs.ProjectEmployeeDTO;
-import com.axcent.DTO.smartPlanDTOs.SmartMonthPlanDTO;
-import com.axcent.DTO.smartPlanDTOsV2.*;
-import com.axcent.security.entity.User;
-import com.axcent.security.service.UserService;
-import com.axcent.service.*;
-import com.axcent.utils.EntitiesMockInit;
+import com.adi.smartcalendar.security.dto.ProfileDTO;
+import com.adi.smartcalendar.security.dto.ProfilePermissionDTO;
+import com.adi.smartcalendar.security.dto.UserDTOInternal;
+import com.adi.smartcalendar.security.service.UserService;
+import com.adi.smartcalendar.web.dto.*;
+import com.adi.smartcalendar.web.dto.smartMonthPlanDto.*;
+import com.adi.smartcalendar.web.service.service.*;
+import com.adi.smartcalendar.web.service.utils.EntitiesMockInit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,79 +31,7 @@ public class SmartMonthPlanServiceImpl implements SmartMonthPlanService {
     private final OfficeService officeService;
     private final ClientService clientService;
 
-
-
-    public SmartMonthPlanDTO getSmartMonthPlan(int month, int year) {
-        //RECUPERO L'AUTENTICATION DELL'UTENTE CHE FA LA RICHIESTA
-        User user = userService.getUserByAuthentication();
-
-        // Creazione del DTO principale che verrà restituito.
-        SmartMonthPlanDTO smartMonthPlanDTO = new SmartMonthPlanDTO();
-
-        // RECUPERO TUTTI I CALENDARI DEL MESE E ANNO RICHIESTI
-        List<CalendarDTO> calendarDTOS = calendarService.findByMonthAndYear(month, year);
-
-        // RECUPERO TUTTI I PROGETTI
-        List<ProjectDTO> projectDTOS = projectService.getAllProjectDTOs();
-        //SE L'UTENTE NON E' ADMIN FILTRO LA LISTA DEI PROGETTI RESTITUENDO SOLO QUELLA APPARTENENTE AL SOGGETTO
-        if(!user.getProfile().getName().name().equalsIgnoreCase("ADMIN")){
-
-            projectDTOS = projectDTOS.stream()
-                    .filter(projectDTO -> projectDTO.getName().equals(employeeService.getEmployeeById(user.getId()).getProject().getName()))
-                    .toList();
-        }
-
-        // RECUPERO TUTTI I RESERVATION DEL MESE E ANNO RICHIESTI E LE RAGGRUPPO PER EMPLOYEEID E CALENDARID
-        // COSI SARA' POSSIBILE ACCEDERE AD UNA RESERVATION IN MODO PIU' VELOCE
-        //(UN MAP CON CHIAVE COMPOSTA DA IDEMPLOYEE-IDCALENDAR E VALORE LISTA DI RESERVATION)
-        Map<String, List<ReservationDTO>> reservationMap = preProcessReservations(month, year);
-
-        // INIZIALIZZO UNA LISTA DI CALENDARPROJECTDTO CHE CONTERRA' TUTTI I CALENDARI DEL MESE E ANNO RICHIESTI
-        List<CalendarProjectDTO> calendarProjectDTOList = calendarDTOS.stream()
-                // PER OGNI CALENDARIO CREO UN CALENDARPROJECTDTO IN CUI SETTO L'ID DEL CALENDARIO E UNA LISTA GENERICA
-                .map(calendar -> new CalendarProjectDTO(calendar.getId(), new ArrayList<>()))
-                .collect(Collectors.toList());
-
-        // CREO UN MAP CHE CONTERRA' TUTTI GLI EMPLOYEE RAGGRUPPATI PER PROGETTO
-        // COSI SARA' POSSIBILE ACCEDERE AD UN EMPLOYEE IN MODO PIU' VELOCE
-        Map<String, Set<EmployeeDTO>> employeeMap = projectDTOS.stream()
-                .collect(Collectors.toMap(ProjectDTO::getName, project ->
-                        new HashSet<>(employeeService.findAllEmployeesByProjectName(project.getName()))
-                ));
-
-        // COSTRUISCO IL DTO PRINCIPALE COMBINANDO LE INFORMAZIONI DEI CALENDARI, DEI PROGETTI E DELLE RESERVATION
-        for (CalendarProjectDTO calendarProjectDTO : calendarProjectDTOList) {
-            // PER OGNI CALENDARPROJECTDTO RECUPERO L'ID DEL CALENDARIO
-            String calendarId = calendarProjectDTO.getCalendarId();
-
-            // COSTRUISCO UN PROJECTEMPLOYEEDTO PER OGNI PROGETTO
-            for (ProjectDTO project : projectDTOS) {
-                // PER OGNI PROGETTO CREO UN PROJECTEMPLOYEEDTO
-                ProjectEmployeeDTO projectEmployeeDTO = new ProjectEmployeeDTO();
-
-                // SETTO L'ID DEL PROGETTO E IL NOME DEL PROGETTO
-                projectEmployeeDTO.setProjectName(project.getName());
-
-                // CREO UNA LISTA DI EMPLOYEERESERVATIONDTO CHE CONTERRA' TUTTI GLI EMPLOYEE DEL PROGETTO
-                List<EmployeeReservationDTO> employeeReservationDTOList = employeeMap.get(project.getName()).stream()
-                        // PER OGNI EMPLOYEE CREO UN EMPLOYEERESERVATIONDTO
-                        .map(employee -> createEmployeeReservationDTO(employee, calendarId, reservationMap))
-                        .collect(Collectors.toList());
-
-                // SETTO LA LISTA DI EMPLOYEERESERVATIONDTO NEL PROJECTEMPLOYEEDTO
-                projectEmployeeDTO.setEmployeeReservationDTOList(employeeReservationDTOList);
-
-                // AGGIUNGO IL PROJECTEMPLOYEEDTO ALLA LISTA DI PROJECTEMPLOYEEDTO DEL CALENDARPROJECTDTO
-                calendarProjectDTO.getProjectEmployeeDTOList().add(projectEmployeeDTO);
-            }
-        }
-
-        // SETTO LA LISTA DI CALENDARPROJECTDTO NEL DTO PRINCIPALE
-        smartMonthPlanDTO.setCalendarProjectDTOList(calendarProjectDTOList);
-        return smartMonthPlanDTO;
-    }
-
-   // METODO CHE RAGGRUPPA LE RESERVATION PER EMPLOYEEID E CALENDARID
+    // METODO CHE RAGGRUPPA LE RESERVATION PER EMPLOYEEID E CALENDARID
     private Map<String, List<ReservationDTO>> preProcessReservations(int month, int year) {
         // RECUPERO TUTTE LE RESERVATION DEL MESE E ANNO RICHIESTI
         List<ReservationDTO> allReservations = reservationService.getAllByMonthAndYear(month, year);
@@ -117,28 +43,6 @@ public class SmartMonthPlanServiceImpl implements SmartMonthPlanService {
         for (ReservationDTO reservation : allReservations) {
             // LA CHIAVE E' COMPOSTA DA EMPLOYEEID E CALENDARID
             String key = reservation.getEmployeeId() + "-" + reservation.getCalendarId();
-
-            // SE LA CHIAVE NON ESISTE NEL MAP LA AGGIUNGO E CREO UNA NUOVA LISTA DI RESERVATION
-            reservationMap.putIfAbsent(key, new ArrayList<>());
-
-            // AGGIUNGO LA RESERVATION ALLA LISTA DI RESERVATION DELLA CHIAVE
-            reservationMap.get(key).add(reservation);
-        }
-
-        return reservationMap;
-    }
-
-    // METODO CHE RAGGRUPPA LE RESERVATION PER CALENDARID E OFFICEID
-    private Map<String,List<ReservationDTO>> createCalendarOfficeMapReservation(int month,int year){
-
-        List<ReservationDTO> allReservations = reservationService.getAllByMonthAndYear(month,year);
-
-        Map<String, List<ReservationDTO>> reservationMap = new HashMap<>();
-
-        // PER OGNI RESERVATION CREO UNA CHIAVE COMPOSTA DA CALENDARID E OFFICEID
-        for (ReservationDTO reservation : allReservations) {
-            // LA CHIAVE E' COMPOSTA DA EMPLOYEEID E CALENDARID
-            String key = reservation.getOfficeId() + "-" + reservation.getCalendarId();
 
             // SE LA CHIAVE NON ESISTE NEL MAP LA AGGIUNGO E CREO UNA NUOVA LISTA DI RESERVATION
             reservationMap.putIfAbsent(key, new ArrayList<>());
@@ -167,29 +71,28 @@ public class SmartMonthPlanServiceImpl implements SmartMonthPlanService {
         return reservationMap;
     }
 
-    // METODO CHE CREA UN EMPLOYEERESERVATIONDTO
-    private EmployeeReservationDTO createEmployeeReservationDTO(EmployeeDTO employee, String calendarId, Map<String, List<ReservationDTO>> reservationMap) {
-        // CREO UN EMPLOYEERESERVATIONDTO
-        EmployeeReservationDTO employeeReservationDTO = new EmployeeReservationDTO();
+    // METODO CHE RAGGRUPPA LE RESERVATION PER CALENDARID E OFFICEID
+    private Map<String,List<ReservationDTO>> createCalendarOfficeMapReservation(int month,int year){
 
-        // SETTO L'ID DELL'EMPLOYEE
-        employeeReservationDTO.setEmployeeId(employee.getUserId());
+        List<ReservationDTO> allReservations = reservationService.getAllByMonthAndYear(month,year);
 
-        // RECUPERO LE RESERVATION DELL'EMPLOYEE E DEL CALENDARIO RICHIESTI
-        String key = employee.getUserId() + "-" + calendarId;
+        Map<String, List<ReservationDTO>> reservationMap = new HashMap<>();
 
-        // RECUPERO LA LISTA DI RESERVATION DELLA CHIAVE
-        List<ReservationDTO> reservations = reservationMap.getOrDefault(key, Collections.emptyList());
+        // PER OGNI RESERVATION CREO UNA CHIAVE COMPOSTA DA CALENDARID E OFFICEID
+        for (ReservationDTO reservation : allReservations) {
+            // LA CHIAVE E' COMPOSTA DA EMPLOYEEID E CALENDARID
+            String key = reservation.getOfficeId() + "-" + reservation.getCalendarId();
 
-        // SETTO LA LISTA DI RESERVATION NELL'EMPLOYEERESERVATIONDTO ORDINATA PER GIORNO
-        if (!reservations.isEmpty()) {
-            employeeReservationDTO.setReservationDTO(reservations.getFirst());
+            // SE LA CHIAVE NON ESISTE NEL MAP LA AGGIUNGO E CREO UNA NUOVA LISTA DI RESERVATION
+            reservationMap.putIfAbsent(key, new ArrayList<>());
+
+            // AGGIUNGO LA RESERVATION ALLA LISTA DI RESERVATION DELLA CHIAVE
+            reservationMap.get(key).add(reservation);
         }
 
-        return employeeReservationDTO;
+        return reservationMap;
     }
 
-    /////////////////////////****** V2 *****/////////////////////////
     public SmartMonthPlanDTOV2 getSmartMonthPlanV2( int month, int year) {
 
 
@@ -197,7 +100,10 @@ public class SmartMonthPlanServiceImpl implements SmartMonthPlanService {
 
 
         //RECUPERO L'AUTENTICATION DELL'UTENTE CHE FA LA RICHIESTA
-        User user = userService.getUserByAuthentication();
+        UserDTOInternal user = userService.getUserByAuthentication();
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        Set<ProfilePermissionDTO> profilePermissions = userService.getProfilePermissions( profile.getUserId() );
         // Creazione del DTO principale che verrà restituito.
         SmartMonthPlanDTOV2 smartMonthPlanDTOV2 = new SmartMonthPlanDTOV2();
         // INIZIALIZZO UNA LISTA DI CALENDARPROJECTDTO CHE CONTERRA' TUTTI I CALENDARI DEL MESE E ANNO RICHIESTI
@@ -205,7 +111,7 @@ public class SmartMonthPlanServiceImpl implements SmartMonthPlanService {
         // RECUPERO TUTTI I PROGETTI
         List<ProjectDTO> projectDTOS = projectService.getAllProjectDTOs();
         //SE L'UTENTE NON E' ADMIN FILTRO LA LISTA DEI PROGETTI RESTITUENDO SOLO QUELLA APPARTENENTE AL SOGGETTO
-        if (!user.getProfile().getName().name().equalsIgnoreCase("ADMIN")) {
+        if (!profile.getName().equalsIgnoreCase("ADMIN")) {
 
             projectDTOS = projectDTOS.stream()
 

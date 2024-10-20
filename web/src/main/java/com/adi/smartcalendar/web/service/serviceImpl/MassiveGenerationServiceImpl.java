@@ -1,14 +1,13 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-import com.axcent.DTO.EmployeeDTO;
-import com.axcent.DTO.MassiveGenerationDTO;
-import com.axcent.DTO.UserEmployeeDTO;
-import com.axcent.security.DTO.SignupDTO;
-import com.axcent.security.entity.User;
-import com.axcent.security.service.AuthenticationService;
-import com.axcent.security.service.UserService;
-import com.axcent.service.EmployeeService;
-import com.axcent.service.MassiveGenerationService;
+import com.adi.smartcalendar.security.dto.SignupDTO;
+import com.adi.smartcalendar.security.dto.UserDTO;
+import com.adi.smartcalendar.security.service.UserService;
+import com.adi.smartcalendar.web.dto.EmployeeDTO;
+import com.adi.smartcalendar.web.dto.MassiveGenerationDTO;
+import com.adi.smartcalendar.web.dto.UserEmployeeDTO;
+import com.adi.smartcalendar.web.service.service.EmployeeService;
+import com.adi.smartcalendar.web.service.service.MassiveGenerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MassiveGenerationServiceImpl implements MassiveGenerationService {
 
-    private final AuthenticationService authenticationService;
     private final UserService userService;
     private final EmployeeService employeeService;
 
     //METODO DI GENERAZIONE MASSIVA DEGLI USER E DEI DIPENDENTI ASSOCIATI
     @Override
-    public MassiveGenerationDTO generateMass(MassiveGenerationDTO massiveGenerationDTO) {
+    public MassiveGenerationDTO generateMass( MassiveGenerationDTO massiveGenerationDTO) {
         MassiveGenerationDTO notCreatedDTOs = new MassiveGenerationDTO();
 
         List<UserEmployeeDTO> userEmployeeDTOList = new ArrayList<>();
@@ -38,7 +36,7 @@ public class MassiveGenerationServiceImpl implements MassiveGenerationService {
 
             try {
                 //todo: rimuovere il parametro booleano in fase di produzione
-                User user = authenticationService.createUser(signupDTO,true);
+                UserDTO user = userService.createUser(signupDTO);
                 EmployeeDTO employeeDTO = new EmployeeDTO();
                 employeeDTO.setUserId(user.getId());
                 employeeDTO.setName(uDTO.getName());

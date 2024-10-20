@@ -1,13 +1,13 @@
 package com.adi.smartcalendar.web.service.utils;
 
-import com.axcent.DTO.*;
-import com.axcent.entity.Employee;
-import com.axcent.repository.CalendarRepository;
-import com.axcent.repository.ClientRepository;
-import com.axcent.repository.ProjectRepository;
-import com.axcent.security.entity.User;
-import com.axcent.security.service.UserService;
-import com.axcent.service.*;
+import com.adi.smartcalendar.security.dto.UserDTO;
+import com.adi.smartcalendar.security.service.UserService;
+import com.adi.smartcalendar.web.dto.*;
+import com.adi.smartcalendar.web.entity.Employee;
+import com.adi.smartcalendar.web.repository.CalendarRepository;
+import com.adi.smartcalendar.web.repository.ClientRepository;
+import com.adi.smartcalendar.web.repository.ProjectRepository;
+import com.adi.smartcalendar.web.service.service.*;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,8 +103,8 @@ public class EntitiesMockInit {
 
     @PostConstruct
     public void initEmployees() {
-        User userAdmin = userService.findByEmail("Adiener@axcent.com").orElseGet( User::new );
-        User userDario = userService.findByEmail("Dario@axcent.com").orElseGet( User::new );
+        UserDTO userAdmin = userService.findByEmail("Adiener@axcent.com");
+        UserDTO userDario = userService.findByEmail("Dario@axcent.com");
 
         linkEmployeeToUser( userAdmin.getId(), "Adiener", "Lopez Velazquez" );
         linkEmployeeToUser( userDario.getId(), "Dario", "Corrado" );
@@ -270,7 +270,7 @@ public class EntitiesMockInit {
         }
     }
 
-    private void createOfficeIfNotPresent(OfficeDTO officeDTO) {
+    private void createOfficeIfNotPresent( OfficeDTO officeDTO) {
          if( officeService.getOfficeByAddress( officeDTO.getAddress() ) != null ) {
             logger.info( "UFFICIO ESISTENTE" );
         } else {

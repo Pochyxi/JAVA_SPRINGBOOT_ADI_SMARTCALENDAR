@@ -1,14 +1,12 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-
-import com.axcent.DTO.ProjectDTO;
-import com.axcent.entity.Project;
-import com.axcent.exception.EntityErrorCodeList;
-import com.axcent.repository.ProjectRepository;
-import com.axcent.security.DTO.PagedResponseDTO;
-import com.axcent.security.exception.ErrorCodeList;
-import com.axcent.security.exception.SmartAxcentException;
-import com.axcent.service.ProjectService;
+import com.adi.smartcalendar.security.dto.PagedResponseDTO;
+import com.adi.smartcalendar.security.exception.ErrorCodeList;
+import com.adi.smartcalendar.security.exception.appException;
+import com.adi.smartcalendar.web.dto.ProjectDTO;
+import com.adi.smartcalendar.web.entity.Project;
+import com.adi.smartcalendar.web.repository.ProjectRepository;
+import com.adi.smartcalendar.web.service.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +26,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     // VOID RETURNS
     @Override
-    public void createProject(ProjectDTO projectDTO) {
+    public void createProject( ProjectDTO projectDTO) {
         Project project = mapProjectDTOToEntity(projectDTO);
 
         save(project);
@@ -44,7 +42,7 @@ public class ProjectServiceImpl implements ProjectService {
     public void deleteProject(Long projectId) {
         Project project = getProjectById(projectId);
         if(! project.getEmployees().isEmpty()){
-            throw new SmartAxcentException(HttpStatus.BAD_REQUEST,EntityErrorCodeList.NOT_EMPTY_PROJECT);
+            throw new appException(HttpStatus.BAD_REQUEST, ErrorCodeList.NOT_EMPTY_PROJECT);
         }
         projectRepository.delete(project);
 
@@ -64,7 +62,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public Project getProjectById(Long id) {
         return projectRepository.findById(id)
-                .orElseThrow(() -> new SmartAxcentException(HttpStatus.BAD_REQUEST,"PROJECT "+ErrorCodeList.NF404));
+                .orElseThrow(() -> new appException(HttpStatus.BAD_REQUEST,"PROJECT " + ErrorCodeList.NF404));
     }
 
     @Override
@@ -93,14 +91,14 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectDTO getProjectDTOByName(String name) {
         Project project = getProjectByName(name);
 
-        if( project == null ) throw new SmartAxcentException(HttpStatus.BAD_REQUEST,"PROJECT "+ErrorCodeList.NF404);
+        if( project == null ) throw new appException(HttpStatus.BAD_REQUEST,"PROJECT "+ErrorCodeList.NF404);
 
         return mapProjectToDTO(project);
     }
 
 
     @Override
-    public PagedResponseDTO<ProjectDTO> getAllProjects(int pageNo, int pageSize, String sortBy, String sortDir) {
+    public PagedResponseDTO<ProjectDTO> getAllProjects( int pageNo, int pageSize, String sortBy, String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();

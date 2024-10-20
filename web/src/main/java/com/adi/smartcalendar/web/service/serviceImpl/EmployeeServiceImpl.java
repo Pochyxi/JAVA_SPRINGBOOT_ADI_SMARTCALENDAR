@@ -1,7 +1,9 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
 import com.adi.smartcalendar.security.dto.PagedResponseDTO;
+import com.adi.smartcalendar.security.dto.ProfileDTO;
 import com.adi.smartcalendar.security.dto.UserDTO;
+import com.adi.smartcalendar.security.dto.UserDTOInternal;
 import com.adi.smartcalendar.security.exception.ErrorCodeList;
 import com.adi.smartcalendar.security.exception.appException;
 import com.adi.smartcalendar.security.service.UserService;
@@ -156,7 +158,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee mapToEntity( EmployeeDTO employeeDTO ) {
         Employee employee = new Employee();
 
-        User user = userService.findById( employeeDTO.getUserId() );
+        UserDTO user = userService.findById( employeeDTO.getUserId() );
 
         employee.setEmployeeCode( employeeDTO.getEmployeeCode() );
         employee.setName( employeeDTO.getName() );
@@ -171,7 +173,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employee.setProject( projectAdded );
 
-        employee.setUser( user );
+        employee.setUserId( user.getId() );
 
 
         return employee;
@@ -203,18 +205,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Page<Employee> employeePage = employeeRepository.findByProjectName( pageable, projectName );
 
-        
 
-        List<User> userList = employeePage.getContent().stream()
-                .map( Employee::getUser ).toList();
-
-
-        List<UserDTO> userDTOS = userList.stream().map( userService::mapUserToDTO ).toList();
+        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
 
 
         PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
 
-        userResponseDTO.setContent( userDTOS );
+        userResponseDTO.setContent( userList );
 
         userResponseDTO.setPageNo( employeePage.getNumber() );
 
@@ -239,19 +236,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Page<Employee> employeePage = employeeRepository.findByProjectNameAndUserEmailContains( pageable, projectName, userEmail );
 
-        User userAuthenticated = userService.getUserByAuthentication();
 
+        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
 
-        List<User> userList = employeePage.getContent().stream()
-                .map( Employee::getUser ).toList();
-
-
-        List<UserDTO> userDTOS = userList.stream().map( userService::mapUserToDTO ).toList();
 
 
         PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
 
-        userResponseDTO.setContent( userDTOS );
+        userResponseDTO.setContent( userList );
 
         userResponseDTO.setPageNo( employeePage.getNumber() );
 
@@ -265,6 +257,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return userResponseDTO;
 
+    }
+
+
+    private List<UserDTO> mapEmployeeListToUserDTOList( List<Employee> employeeList ) {
+        return employeeList.stream().map( (employee -> {
+            Long userId = employee.getUserId();
+            return userService.findById( userId );
+        }) ).toList();
     }
 
 
@@ -291,9 +291,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-        User user = userService.getUserByAuthentication();
+        UserDTOInternal user = userService.getUserByAuthentication();
 
-        int powerOfUser = user.getProfile().getPower();
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        int powerOfUser = profile.getPower();
 
         Page<Employee> employeePageList = findByUserProfilePowerGreaterThanEqual( powerOfUser, pageable );
 
@@ -311,13 +313,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         // un'eccezione
         if( (employeeDTO.getBlockedFrom() != null && employeeDTO.getBlockedTo() == null) ||
                 (employeeDTO.getBlockedFrom() == null && employeeDTO.getBlockedTo() != null) ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "BLOCKED FROM/TO " + EntityErrorCodeList.CANNOT_BE_EMPTY );
+            throw new appException( HttpStatus.BAD_REQUEST, "BLOCKED FROM/TO " + ErrorCodeList.CANNOT_BE_EMPTY );
         }
 
         // Nel momento in cui si modifica un dipendente, se il from è pieno e il to è pieno, ma il to è prima del from,
         // viene lanciata un'eccezione
         if( employeeDTO.getBlockedTo() != null && employeeDTO.getBlockedTo().isBefore( employeeDTO.getBlockedFrom() ) ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "BLOCKED TO " + EntityErrorCodeList.DATE_INVALID );
+            throw new appException( HttpStatus.BAD_REQUEST, "BLOCKED TO " + ErrorCodeList.DATE_INVALID );
         }
 
         Employee employee = getEmployeeById( userId );
@@ -353,7 +355,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         eDTO.setBlockedTo( employee.getBlockedTo() );
 
-        eDTO.setUserId( employee.getUser().getId() );
+        eDTO.setUserId( employee.getUserId() );
 
         eDTO.setProjectName( employee.getProject() == null ? null : employee.getProject().getName() );
 
@@ -369,15 +371,15 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
 
     private void setEmployeePropertiesFromDTO( Long userId, EmployeeDTO eDTO, Employee employee ) {
-        User user = userService.findById( userId );
+        UserDTO user = userService.findById( userId );
 
         if( (eDTO.getBlockedFrom() != null && eDTO.getBlockedTo() == null) ||
                 (eDTO.getBlockedFrom() == null && eDTO.getBlockedTo() != null) ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "BLOCKED FROM/TO " + EntityErrorCodeList.CANNOT_BE_EMPTY );
+            throw new appException( HttpStatus.BAD_REQUEST, "BLOCKED FROM/TO " + ErrorCodeList.CANNOT_BE_EMPTY );
         }
         if( eDTO.getBlockedFrom() != null ) {
             if( eDTO.getBlockedTo().isBefore( eDTO.getBlockedFrom() ) ) {
-                throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "BLOCKED TO " + EntityErrorCodeList.DATE_INVALID );
+                throw new appException( HttpStatus.BAD_REQUEST, "BLOCKED TO " + ErrorCodeList.DATE_INVALID );
             }
         }
 
@@ -398,7 +400,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setBlockedTo( eDTO.getBlockedTo() == null ? employee.getBlockedTo() : eDTO.getBlockedTo() );
 
 
-        employee.setUser( user );
+        employee.setUserId( user.getId() );
 
         Project project = projectService.getProjectByName( eDTO.getProjectName() );
 

@@ -7,6 +7,8 @@ import java.util.Set;
 
 public interface UserService {
 
+    UserDTO createUser( SignupDTO signupDTO );
+
     UserDTO findById( Long id );
 
     Optional<UserDTOInternal> findByUsernameOrEmail( String usernameOrEmail);
@@ -28,4 +30,5 @@ public interface UserService {
     void deleteUser( Long id );
 
 
+    UserDTO findByEmail( String mail );
 }

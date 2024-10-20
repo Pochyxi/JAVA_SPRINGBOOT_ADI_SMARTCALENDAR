@@ -1,6 +1,9 @@
 package com.adi.smartcalendar.web.entity.spec;
 
-import com.axcent.entity.*;
+import com.adi.smartcalendar.web.entity.Calendar;
+import com.adi.smartcalendar.web.entity.Employee;
+import com.adi.smartcalendar.web.entity.Project;
+import com.adi.smartcalendar.web.entity.Reservation;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -8,7 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 public class ReservationSpec {
 
     // SPIEGAZIONE METODO
-    public static Specification<Reservation> findByProjectId(Long projectId) {
+    public static Specification<Reservation> findByProjectId( Long projectId) {
         return (root, query, criteriaBuilder) -> {
             if (projectId == null) {
                 return criteriaBuilder.conjunction(); // Nessuna condizione

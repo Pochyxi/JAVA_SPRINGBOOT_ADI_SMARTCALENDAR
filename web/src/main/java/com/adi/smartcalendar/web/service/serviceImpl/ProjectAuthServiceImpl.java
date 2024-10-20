@@ -1,10 +1,11 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-import com.axcent.entity.Employee;
-import com.axcent.security.entity.User;
-import com.axcent.security.service.UserService;
-import com.axcent.service.EmployeeService;
-import com.axcent.service.ProjectAuthService;
+import com.adi.smartcalendar.security.dto.UserDTO;
+import com.adi.smartcalendar.security.dto.UserDTOInternal;
+import com.adi.smartcalendar.security.service.UserService;
+import com.adi.smartcalendar.web.entity.Employee;
+import com.adi.smartcalendar.web.service.service.EmployeeService;
+import com.adi.smartcalendar.web.service.service.ProjectAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,7 +40,7 @@ public class ProjectAuthServiceImpl implements ProjectAuthService {
         if (hasPermission) {
             return true;
         } else {
-            User user = userService.getUserByAuthentication();
+            UserDTOInternal user = userService.getUserByAuthentication();
             Employee employee = employeeService.getEmployeeById(user.getId());
             return Objects.equals(employee.getProject().getId(),projectId);
         }

@@ -45,8 +45,7 @@ public class Employee {
     @Temporal(TemporalType.DATE)
     private LocalDate blockedTo;
 
-    @Transient
-    private User user;
+    private Long userId;
 
     @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH })
     @JoinColumn

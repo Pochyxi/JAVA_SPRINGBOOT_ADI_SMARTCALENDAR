@@ -1,19 +1,21 @@
 package com.adi.smartcalendar.web.service.serviceImpl;
 
-import com.axcent.DTO.ReservationDTO;
-import com.axcent.DTO.smartPlanDTOsV2.MassivePrenotationDTO;
-import com.axcent.entity.*;
-import com.axcent.entity.Calendar;
-import com.axcent.entity.spec.ReservationSpec;
-import com.axcent.enumerated.ReservationType;
-import com.axcent.exception.EntityErrorCodeList;
-import com.axcent.repository.ReservationRepository;
-import com.axcent.security.entity.User;
-import com.axcent.security.enumerated.PermissionList;
-import com.axcent.security.exception.ErrorCodeList;
-import com.axcent.security.exception.SmartAxcentException;
-import com.axcent.security.service.UserService;
-import com.axcent.service.*;
+import com.adi.smartcalendar.security.dto.ProfileDTO;
+import com.adi.smartcalendar.security.dto.ProfilePermissionDTO;
+import com.adi.smartcalendar.security.dto.UserDTOInternal;
+import com.adi.smartcalendar.security.enumerated.PermissionList;
+import com.adi.smartcalendar.security.exception.ErrorCodeList;
+import com.adi.smartcalendar.security.exception.appException;
+import com.adi.smartcalendar.security.models.Profile;
+import com.adi.smartcalendar.security.service.UserService;
+import com.adi.smartcalendar.web.dto.ReservationDTO;
+import com.adi.smartcalendar.web.dto.smartMonthPlanDto.MassivePrenotationDTO;
+import com.adi.smartcalendar.web.entity.*;
+import com.adi.smartcalendar.web.entity.Calendar;
+import com.adi.smartcalendar.web.entity.enumerated.ReservationType;
+import com.adi.smartcalendar.web.entity.spec.ReservationSpec;
+import com.adi.smartcalendar.web.repository.ReservationRepository;
+import com.adi.smartcalendar.web.service.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,16 +49,16 @@ public class ReservationServiceImpl implements ReservationService {
 
         //SE E' STATO ASSEGNATO SIA L'OFFICE CHE IL CLIENTE RITORNA UN ECCEZIONE DI AMBIGUITA'
         if( reservation.getOffice() != null && reservation.getClient() != null ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "OFFICE/CLIENT " + EntityErrorCodeList.AMBIGUOUS_FIELDS );
+            throw new appException( HttpStatus.BAD_REQUEST, "OFFICE/CLIENT " + ErrorCodeList.AMBIGUOUS_FIELDS );
         }
 
         if( reservation.getOffice() != null && reservation.getReservationType() != ReservationType.PRESENT ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATIONTYPENAME/OFFICE " + EntityErrorCodeList.AMBIGUOUS_FIELDS );
+            throw new appException( HttpStatus.BAD_REQUEST, "RESERVATIONTYPENAME/OFFICE " + ErrorCodeList.AMBIGUOUS_FIELDS );
 
         }
 
         if( reservation.getClient() != null && reservation.getReservationType() != ReservationType.CLIENT ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATIONTYPENAME/CLIENT " + EntityErrorCodeList.AMBIGUOUS_FIELDS );
+            throw new appException( HttpStatus.BAD_REQUEST, "RESERVATIONTYPENAME/CLIENT " + ErrorCodeList.AMBIGUOUS_FIELDS );
 
         }
 
@@ -71,18 +73,18 @@ public class ReservationServiceImpl implements ReservationService {
         //E SE LA PRENOTAZIONE VIENE EFFETTUATA ENTRO IL 15 DEL MESE
 
         if( !canManageReservation( reservationDTO.getEmployeeId() ) ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION );
+            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION );
         }
 
         //CONTROLLO CHE LA PRENOTAZIONE NON SIA GIA' PRESENTE
         if( !getByEmployeeAndDate( reservationDTO.getEmployeeId(), reservationDTO.getCalendarId() ).isEmpty() ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.EXISTING_RESERVATION );
+            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.EXISTING_RESERVATION );
         }
 
         //CONTROLLO CHE NON SI POSSANO FARE PRENOTAZIONI IN UN GIORNO FESTIVO
         Calendar calendarReserved = calendarService.getCalendarById( reservationDTO.getCalendarId() );
         if( calendarReserved.isHoliday() ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.IS_HOLIDAY );
+            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.IS_HOLIDAY );
         }
 
         Reservation reservation = new Reservation();
@@ -92,12 +94,12 @@ public class ReservationServiceImpl implements ReservationService {
 
         if( reservationDTO.getOfficeId() != null ) {
             if( !hasUserReservationCreatePermission() ) {
-                throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION + " CANNOT_ASSIGN_OFFICE_OR_CLIENT" );
+                throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION + " CANNOT_ASSIGN_OFFICE_OR_CLIENT" );
             }
 
             if( reservationDTO.getOfficeId() > 0 ) {
                 Office officeFound = officeService.getOfficeById( reservationDTO.getOfficeId() )
-                        .orElseThrow( () -> new SmartAxcentException( HttpStatus.BAD_REQUEST, "OFFICE" + EntityErrorCodeList.NF404 ) );
+                        .orElseThrow( () -> new appException( HttpStatus.BAD_REQUEST, "OFFICE" + ErrorCodeList.NF404 ) );
                 reservation.setOffice( officeFound );
             }
 
@@ -106,7 +108,7 @@ public class ReservationServiceImpl implements ReservationService {
         // CONTROLLO CHE IL CLIENT NEL DTO ESISTA
         if( reservationDTO.getClientId() != null ) {
             if( !hasUserReservationCreatePermission() ) {
-                throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION + " CANNOT_ASSIGN_OFFICE_OR_CLIENT" );
+                throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION + " CANNOT_ASSIGN_OFFICE_OR_CLIENT" );
             }
 
             if( reservationDTO.getClientId() > 0 ) {
@@ -134,7 +136,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         // CONTROLLO CHE VENGA INSERITO CORRETTAMENTE IL NOME DEL TIPO DI PRENOTAZIONE
         if( !isCorrectReservationType( reservationDTO ) || reservationDTO.getReservationTypeName() == null ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATION_TYPE " + EntityErrorCodeList.NOT_CORRECT_TYPE );
+            throw new appException( HttpStatus.BAD_REQUEST, "RESERVATION_TYPE " + ErrorCodeList.NOT_CORRECT_TYPE );
         }
 
         reservation.setReservationType( ReservationType.valueOf( reservationDTO.getReservationTypeName() ) );
@@ -190,11 +192,15 @@ public class ReservationServiceImpl implements ReservationService {
     public void deleteReservation( Long reservationId ) {
 
         Reservation reservation = getReservationById( reservationId );
-        User user = userService.getUserByAuthentication();
+        UserDTOInternal user = userService.getUserByAuthentication();
 
-        boolean hasDeletePermission = user.getProfile().getProfilePermissions().stream()
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        Set<ProfilePermissionDTO> profilePermissions = userService.getProfilePermissions( profile.getUserId() );
+
+        boolean hasDeletePermission = profilePermissions.stream()
                 .anyMatch( ( profilePermission ) -> Objects.equals(
-                        profilePermission.getPermission().getName().name(),
+                        profilePermission.getPermissionName(),
                         PermissionList.RESERVATION.name() ) && profilePermission.getValueDelete() == 1 );
 
         boolean hasSameId = Objects.equals( reservation.getEmployee().getId(), user.getId() );
@@ -205,7 +211,7 @@ public class ReservationServiceImpl implements ReservationService {
         // DIPENDENTE CONTENUTO NELLA PRENOTAZIONE O CHE ABBIA I PERMESSI
         if( !canDelete ) {
 
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION );
+            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION );
         }
 
         reservationRepository.delete( reservation );
@@ -214,7 +220,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public void deleteReservationByEmployeeIdAndCalendarId( Long employeeId, String calendarId ) {
         Reservation reservation = reservationRepository.findByEmployeeIdAndCalendarId( employeeId, calendarId )
-                .orElseThrow( () -> new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATION" + EntityErrorCodeList.NF404 ) );
+                .orElseThrow( () -> new appException( HttpStatus.BAD_REQUEST, "RESERVATION" + ErrorCodeList.NF404 ) );
         deleteReservation( reservation.getId() );
 
     }
@@ -246,7 +252,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         if( !isCorrectReservationType( reservationDTO ) || reservationDTO.getReservationTypeName() == null ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATION_TYPE " + EntityErrorCodeList.NOT_CORRECT_TYPE );
+            throw new appException( HttpStatus.BAD_REQUEST, "RESERVATION_TYPE " + ErrorCodeList.NOT_CORRECT_TYPE );
         }
 
         reservation.setReservationType( ReservationType.valueOf( reservationDTO.getReservationTypeName() ) );
@@ -261,7 +267,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Reservation getReservationById( Long id ) {
         return reservationRepository.findById( id )
-                .orElseThrow( () -> new SmartAxcentException( HttpStatus.BAD_REQUEST, "RESERVATION " + ErrorCodeList.NF404 ) );
+                .orElseThrow( () -> new appException( HttpStatus.BAD_REQUEST, "RESERVATION " + ErrorCodeList.NF404 ) );
 
     }
 
@@ -284,7 +290,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDTO> getReservationsByProjectId( Long projectId ) {
         if( !canViewProjectReservation( projectId ) ) {
-            throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION );
+            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION );
         }
 
         Specification<Reservation> spec = ReservationSpec.findByProjectId( projectId );
@@ -303,10 +309,15 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDTO> getByEmployeeAndDate( Long employeeId, String calendarId ) {
         //CONTROLLO SE L'UTENTE HA I PERMESSI PER VEDERE LE PRENOTAZIONI
-        User user = userService.getUserByAuthentication();
+        UserDTOInternal user = userService.getUserByAuthentication();
 
-        boolean hasReservationReadPermission = user.getProfile().getProfilePermissions().stream()
-                .anyMatch( ( profilePermission ) -> Objects.equals( profilePermission.getPermission().getName().name(), PermissionList.RESERVATION.name() ) && profilePermission.getValueRead() == 1 );
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        Set<ProfilePermissionDTO> profilePermissions = userService.getProfilePermissions( profile.getUserId() );
+
+        boolean hasReservationReadPermission = profilePermissions.stream()
+                .anyMatch( ( profilePermission ) -> Objects.equals( profilePermission.getPermissionName(),
+                        PermissionList.RESERVATION.name() ) && profilePermission.getValueRead() == 1 );
 
 
         boolean hasSameId = Objects.equals( employeeId, user.getId() );
@@ -318,7 +329,7 @@ public class ReservationServiceImpl implements ReservationService {
             List<Reservation> reservations = reservationRepository.findAll( spec );
 
             return reservations.stream().map( this::mapEntityToReservationDTO ).toList();
-        } else throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_PERMISSION );
+        } else throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_PERMISSION );
     }
 
     @Override
@@ -359,7 +370,7 @@ public class ReservationServiceImpl implements ReservationService {
     //controllando se l'id di chi sta prenotando è uguale a quello di chi sta richiedendo
     boolean canManageReservation( Long employeeId ) {
         //RECUPERO L'UTENTE DELLA RICHIESTA
-        User user = userService.getUserByAuthentication();
+        UserDTOInternal user = userService.getUserByAuthentication();
 
         //CONTROLLO SE HA I PERMESSI DI CREATE
         boolean hasPermission = hasUserReservationCreatePermission();
@@ -372,7 +383,7 @@ public class ReservationServiceImpl implements ReservationService {
             //SE E' BLOCCATO LANCIA ECCEZIONE
             if( employeeFound.getBlockedTo() != null ) {
                 if( employeeFound.getBlockedTo().isAfter( LocalDate.now() ) ) {
-                    throw new SmartAxcentException( HttpStatus.BAD_REQUEST, "EMPLOYEE " + EntityErrorCodeList.IS_BLOCKED );
+                    throw new appException( HttpStatus.BAD_REQUEST, "EMPLOYEE " + ErrorCodeList.IS_BLOCKED );
                 }
             }
 
@@ -383,19 +394,31 @@ public class ReservationServiceImpl implements ReservationService {
 
     //METODO CHE CONTROLLA SE L'UTENTE PUO' VISUALIZZARE IL PROGETTO(SE NON E' ADMIN CONTROLLA SE APPARTIENE AL PROGETTO)
     boolean canViewProjectReservation( Long projectId ) {
-        User user = userService.getUserByAuthentication();
-        return Objects.equals( employeeService.getEmployeeById( user.getId() ).getProject().getId(), projectId ) || user.getProfile().getProfilePermissions().stream()
-                .anyMatch( ( profilePermission ) -> Objects.equals
-                        ( profilePermission.getPermission().getName().name(), PermissionList.RESERVATION.name() )
+        UserDTOInternal user = userService.getUserByAuthentication();
+
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        Set<ProfilePermissionDTO> profilePermissions = userService.getProfilePermissions( profile.getUserId() );
+
+        return Objects.equals( employeeService.getEmployeeById( user.getId() ).getProject().getId(), projectId ) ||
+                profilePermissions
+                        .stream()
+                        .anyMatch( ( profilePermission ) -> Objects.equals
+                        ( profilePermission.getPermissionName(), PermissionList.RESERVATION.name() )
                         && profilePermission.getValueRead() == 1 );
     }
 
     //METODO CHE CONTROLLA SE L'UTENTE PUO' ASSEGNARE L'UFFICIO O IL CLIENT(DEVE AVERE RESERVATION_CREATE)
     private boolean hasUserReservationCreatePermission() {
-        User user = userService.getUserByAuthentication();
-        return user.getProfile().getProfilePermissions().stream()
+        UserDTOInternal user = userService.getUserByAuthentication();
+
+        ProfileDTO profile = userService.getProfile( user.getId() );
+
+        Set<ProfilePermissionDTO> profilePermissions = userService.getProfilePermissions( profile.getUserId() );
+
+        return profilePermissions.stream()
                 .anyMatch( ( profilePermission ) -> Objects.equals
-                        ( profilePermission.getPermission().getName().name(), PermissionList.RESERVATION.name() )
+                        ( profilePermission.getPermissionName(), PermissionList.RESERVATION.name() )
                         && profilePermission.getValueCreate() == 1 );
     }
 
@@ -429,7 +452,7 @@ public class ReservationServiceImpl implements ReservationService {
 //            }
             //LANCIA ECCEZIONE SE LA DATA DI PRENOTAZIONE NON E' DEL MESE SUCCESSIVO E DELL'ANNO CORRENTE
             if( monthOfReservation != calendar.getMonth() || yearOfReservation != calendar.getYear() ) {
-                throw new SmartAxcentException( HttpStatus.BAD_REQUEST, EntityErrorCodeList.INVALID_RESERVATION );
+                throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_RESERVATION );
             }
             reservation.setCalendar( calendar );
 

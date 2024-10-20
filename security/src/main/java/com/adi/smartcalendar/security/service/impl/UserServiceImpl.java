@@ -23,6 +23,11 @@ public class UserServiceImpl implements UserService {
     private final UserApiService userApiService;
 
     @Override
+    public UserDTO createUser( SignupDTO signupDTO ) {
+        return userApiService.createUser( signupDTO ).block();
+    }
+
+    @Override
     public UserDTO findById( Long id ) {
         return userApiService.getById( id ).block();
     }
@@ -106,6 +111,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser( Long id ) {
         userApiService.deleteUser( id ).block();
+    }
+
+    @Override
+    public UserDTO findByEmail( String mail ) {
+        return userApiService.findByEmail( mail ).block();
     }
 
     /* GET USER BY AUTHENTICATION
