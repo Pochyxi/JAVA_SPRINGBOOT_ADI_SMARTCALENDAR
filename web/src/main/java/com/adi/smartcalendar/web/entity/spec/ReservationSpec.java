@@ -1,9 +1,6 @@
 package com.adi.smartcalendar.web.entity.spec;
 
-import com.adi.smartcalendar.web.entity.Calendar;
-import com.adi.smartcalendar.web.entity.Employee;
-import com.adi.smartcalendar.web.entity.Project;
-import com.adi.smartcalendar.web.entity.Reservation;
+import com.adi.smartcalendar.web.entity.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,7 +15,7 @@ public class ReservationSpec {
             }
 
             // JOIN RESERVATION -> EMPLOYEE
-            Join<Reservation, Employee> employeeJoin = root.join(Reservation_.EMPLOYEE);
+            Join<Reservation, Employee> employeeJoin = root.join( Reservation_.EMPLOYEE);
 
             // JOIN EMPLOYEE -> PROJECT
             Join<Employee, Project> projectJoin = employeeJoin.join(Employee_.PROJECT);
