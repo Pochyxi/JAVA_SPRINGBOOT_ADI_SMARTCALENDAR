@@ -91,10 +91,7 @@ public class SecurityConfig {
                 .csrf( AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests( ( authorize ) -> authorize
                         // TUTTE LE RICHIESTE CHE INIZIANO CON /API/AUTH/ SONO ACCESSIBILI DA TUTTI
-                        .requestMatchers( "/api/smartcalendar/user/**" ).authenticated()
-
-                        // SERVIREBBE NEL CASO SI IMPLEMENTA LO SWAGGER PER REINDIRIZZARE A TALE PAGINA
-                        .requestMatchers( "/", "/api/smartcalendar/auth/**" ).permitAll()
+                        .requestMatchers( "/api/**" ).authenticated()
 
                         // TUTTE LE ALTRE RICHIESTE SONO ACCESSIBILI SOLO DA UTENTI AUTENTICATI
                         .anyRequest().authenticated() ).exceptionHandling( exception -> exception

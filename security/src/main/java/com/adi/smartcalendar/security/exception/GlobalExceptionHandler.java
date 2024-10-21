@@ -1,17 +1,24 @@
 package com.adi.smartcalendar.security.exception;
 
 import com.adi.smartcalendar.security.dto.ErrorDetailsDTO;
+import com.adi.smartcalendar.security.dto.ValidationDetailDTO;
+import com.adi.smartcalendar.security.dto.ValidationErrorDetailsDTO;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -72,6 +79,40 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
 
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid( MethodArgumentNotValidException ex,
+                                                                   HttpHeaders headers,
+                                                                   HttpStatusCode status,
+                                                                   WebRequest request
+    ) {
+        ValidationErrorDetailsDTO errorDetails = new ValidationErrorDetailsDTO();
+        List<ValidationDetailDTO> validationDetailDTOList = new ArrayList<>();
+
+        ex.getBindingResult().getAllErrors().forEach( ( error ) -> {
+            String fieldName = "";
+            String objectName = "";
+
+            try {
+                fieldName = (( FieldError ) error).getField();
+                objectName = error.getObjectName();
+            } catch (Exception e) {
+                objectName = error.getObjectName();
+                fieldName = "N/D";
+            }
+
+
+
+            String errorMessage = error.getDefaultMessage();
+
+            errorDetails.setTimestamp(new Date());
+            errorDetails.setMessage( "Validation Errors" );
+            validationDetailDTOList.add( new ValidationDetailDTO( fieldName, objectName, errorMessage ) );
+        } );
+        errorDetails.setValidationDetailDTOList( validationDetailDTOList );
+        errorDetails.setDetails(validationDetailDTOList.size() + " errors" );
+        return new ResponseEntity<>( errorDetails, HttpStatus.BAD_REQUEST );
     }
 
 }

@@ -15,7 +15,7 @@ public interface EmployeeService {
     void save ( Employee employee);
 
 
-    void createEmployee( EmployeeDTO employeeDTO);
+    EmployeeDTO createEmployee( EmployeeDTO employeeDTO);
 
     void moveEmployeeToProject(Long projectId, Long employeeId);
 

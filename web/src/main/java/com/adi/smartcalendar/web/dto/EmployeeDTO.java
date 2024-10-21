@@ -31,6 +31,10 @@ public class EmployeeDTO {
 
     private Long userId;
 
+    private int userProfilePower;
+
+    private String userEmail;
+
     private String projectName;
 
 }

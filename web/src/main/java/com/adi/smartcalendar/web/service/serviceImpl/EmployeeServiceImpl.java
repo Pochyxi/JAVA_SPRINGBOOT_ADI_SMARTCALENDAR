@@ -22,10 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,7 +46,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     // Questo metodo crea un dipendente nel database
     @Override
     @Transactional
-    public void createEmployee( EmployeeDTO employeeDTO ) {
+    public EmployeeDTO createEmployee( EmployeeDTO employeeDTO ) {
         // Recupero l'utente dal database in base all'id, se non esiste viene creato un nuovo utente
         Employee employeeFound = employeeRepository.findByUserId( employeeDTO.getUserId() )
                 .orElseGet( Employee::new );
@@ -71,7 +68,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeFound.setProject( defaultProject );
         }
 
-        employeeRepository.save( employeeFound );
+        employeeFound.setEmployeeCode(  "AX" + employeeFound.getUserId() + new Random().nextInt( 100000 ) );
+
+        return mapEmployeeToDTO( employeeRepository.save( employeeFound ) );
     }
 
     // Questo metodo sposta un dipendente da un progetto ad un altro
@@ -159,7 +158,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
 
         UserDTO user = userService.findById( employeeDTO.getUserId() );
+        ProfileDTO profile = userService.getProfile( user.getId() );
 
+        employee.setUserEmail( user.getEmail() );
+        employee.setUserProfilePower( profile.getPower() );
         employee.setUserId( employeeDTO.getUserId() );
         employee.setEmployeeCode( employeeDTO.getEmployeeCode() );
         employee.setName( employeeDTO.getName() );
@@ -193,8 +195,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Page<Employee> findByUserProfilePowerGreaterThanEqual( int power, Pageable page ) {
-        return null;
-//        return employeeRepository.findByUserProfilePowerGreaterThanEqual( power, page );
+        return employeeRepository.findByUserProfilePowerGreaterThanEqual( page, power );
     }
 
     @Override
@@ -205,29 +206,28 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-//        Page<Employee> employeePage = employeeRepository.findByProjectName( pageable, projectName );
-//
-//
-//        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
-//
-//
-//        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-//
-//        userResponseDTO.setContent( userList );
-//
-//        userResponseDTO.setPageNo( employeePage.getNumber() );
-//
-//        userResponseDTO.setPageSize( employeePage.getSize() );
-//
-//        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
-//
-//        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
-//
-//        userResponseDTO.setLast( employeePage.isLast() );
-//
-//        return userResponseDTO;
+        Page<Employee> employeePage = employeeRepository.findByProjectName( pageable, projectName );
 
-        return null;
+
+        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
+
+
+        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
+
+        userResponseDTO.setContent( userList );
+
+        userResponseDTO.setPageNo( employeePage.getNumber() );
+
+        userResponseDTO.setPageSize( employeePage.getSize() );
+
+        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
+
+        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
+
+        userResponseDTO.setLast( employeePage.isLast() );
+
+        return userResponseDTO;
+
     }
 
     @Override
@@ -239,31 +239,28 @@ public class EmployeeServiceImpl implements EmployeeService {
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
 
-//        Page<Employee> employeePage = employeeRepository.findByProjectNameAndUserEmailContains( pageable, projectName, userEmail );
-//
-//
-//        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
-//
-//
-//
-//        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-//
-//        userResponseDTO.setContent( userList );
-//
-//        userResponseDTO.setPageNo( employeePage.getNumber() );
-//
-//        userResponseDTO.setPageSize( employeePage.getSize() );
-//
-//        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
-//
-//        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
-//
-//        userResponseDTO.setLast( employeePage.isLast() );
-//
-//        return userResponseDTO;
+        Page<Employee> employeePage = employeeRepository.findByProjectNameAndUserEmailContains( pageable, projectName, userEmail );
 
-        return null;
 
+        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
+
+
+
+        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
+
+        userResponseDTO.setContent( userList );
+
+        userResponseDTO.setPageNo( employeePage.getNumber() );
+
+        userResponseDTO.setPageSize( employeePage.getSize() );
+
+        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
+
+        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
+
+        userResponseDTO.setLast( employeePage.isLast() );
+
+        return userResponseDTO;
     }
 
 
@@ -364,6 +361,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         eDTO.setUserId( employee.getUserId() );
 
+        eDTO.setUserEmail( employee.getUserEmail() );
+
+        eDTO.setUserProfilePower( employee.getUserProfilePower() );
+
         eDTO.setProjectName( employee.getProject() == null ? null : employee.getProject().getName() );
 
         return eDTO;
@@ -376,7 +377,6 @@ public class EmployeeServiceImpl implements EmployeeService {
      Questo metodo accetta un EmployeeDTO e un Employee e setta le proprietà di Employee in base alle informazioni
      ricavate dall'oggetto EmployeeDTO
      */
-
     private void setEmployeePropertiesFromDTO( Long userId, EmployeeDTO eDTO, Employee employee ) {
         UserDTO user = userService.findById( userId );
 

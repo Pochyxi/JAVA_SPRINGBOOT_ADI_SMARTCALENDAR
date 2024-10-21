@@ -22,6 +22,11 @@ public class Employee {
     @Column (name="userId")
     private Long userId;
 
+    @Column(name="user_profile_power")
+    private int userProfilePower;
+
+    private String userEmail;
+
     @Column(name="employee_code")
     private String employeeCode;
 

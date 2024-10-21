@@ -3,7 +3,7 @@ name: postgres-pgadmin-smartcalendar
 
 # Definizione delle reti utilizzate nel file Compose
 networks:
-  postgres-pgadmin-smartaxcy_nt_smartaxcy:  # Riutilizza la rete chiamata "nt_smartaxcy"
+  postgres-pgadmin-smartaxcy_nt_smartaxcy:
     external: true  # Indica che la rete esiste già e verrà utilizzata da questo compose
 
 # Definizione dei servizi (container) che verranno eseguiti
@@ -15,7 +15,7 @@ services:
     volumes:
       - psdb-volume-smartcalendar:/var/lib/postgresql/data  # Mappa un volume per mantenere i dati persistenti del database
     networks:
-      postgres-pgadmin-smartaxcy_nt_smartaxcy:  # Connetti il container alla rete "nt_smartaxcy"
+      postgres-pgadmin-smartaxcy_nt_smartaxcy:
         ipv4_address: 172.24.0.5  # Assegna un indirizzo IP statico specifico al container
     ports:
       - "5450:5432"  # Espone la porta 5432 del container sulla porta 5450 dell'host
@@ -33,7 +33,7 @@ services:
     restart: unless-stopped  # Il container si riavvia automaticamente tranne se viene fermato esplicitamente
     container_name: pgadmin_smartcalendar  # Nome del container specificato come "pgadmin_smartcalendar"
     networks:
-      postgres-pgadmin-smartaxcy_nt_smartaxcy:  # Connetti il container alla rete "nt_smartaxcy"
+      postgres-pgadmin-smartaxcy_nt_smartaxcy:
         ipv4_address: 172.24.0.6  # Assegna un indirizzo IP statico specifico al container
     ports:
       - "8092:80"  # Espone la porta 80 del container sulla porta 8092 dell'host
@@ -53,7 +53,7 @@ services:
     ports:
       - "8093:8080"  # Espone la porta 8093
     networks:
-      postgres-pgadmin-smartaxcy_nt_smartaxcy:  # Connetti l'app alla rete "nt_smartaxcy"
+      postgres-pgadmin-smartaxcy_nt_smartaxcy:
         ipv4_address: 172.24.0.7  # Assegna un IP statico per il backend
     depends_on:
       - pgsql_calendar  # Assicura che il servizio PostgreSQL sia pronto prima di avviare l'app

@@ -44,9 +44,8 @@ public class EmployeeController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('USER_CREATE') ")
-    public ResponseEntity<Void> createEmployee(@RequestBody EmployeeDTO eDTO) {
-        employeeService.createEmployee(eDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody EmployeeDTO eDTO) {
+        return new ResponseEntity<>(employeeService.createEmployee(eDTO), HttpStatus.CREATED);
     }
 
 
