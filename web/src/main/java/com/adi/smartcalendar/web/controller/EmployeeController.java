@@ -4,7 +4,7 @@ import com.adi.smartcalendar.security.dto.PagedResponseDTO;
 import com.adi.smartcalendar.security.dto.UserDTO;
 import com.adi.smartcalendar.web.dto.EmployeeDTO;
 import com.adi.smartcalendar.web.service.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,14 +15,10 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("api/employee")
+@RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService employeeService;
-
-    @Autowired
-    public EmployeeController(EmployeeService employeeService) {
-        this.employeeService = employeeService;
-    }
 
     @GetMapping(value = "/{id}")
     @PreAuthorize("@authorityService.userHasPowerOnSubject(#id, 'USER_READ')")
@@ -57,10 +53,10 @@ public class EmployeeController {
     @GetMapping(value = "/all")
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<PagedResponseDTO<EmployeeDTO>> getAllEmployees(
-            @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "${app.pagination.default_pageSize}") int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "${app.pagination.default_sortBy}", required = false) String sortBy,
-            @RequestParam(value = "sortOrder", defaultValue = "${app.pagination.default_sortDirection}") String sortDir
+            @RequestParam(value = "pageNo", defaultValue = "${app.security.pagination.default_pageNumber}") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "${app.security.pagination.default_pageSize}") int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "${app.security.pagination.default_sortBy}", required = false) String sortBy,
+            @RequestParam(value = "sortOrder", defaultValue = "${app.security.pagination.default_sortDirection}") String sortDir
     ) {
         return new ResponseEntity<>(employeeService.getAllEmployees(pageNo, pageSize, sortBy, sortDir), HttpStatus.OK);
     }
@@ -69,10 +65,10 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<PagedResponseDTO<UserDTO>> getAllEmployeesByProjectName(
             @PathVariable String projectName,
-            @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "${app.pagination.default_pageSize}") int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "${app.pagination.default_sortBy}", required = false) String sortBy,
-            @RequestParam(value = "sortOrder", defaultValue = "${app.pagination.default_sortDirection}") String sortDir
+            @RequestParam(value = "pageNo", defaultValue = "${app.security.pagination.default_pageNumber}") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "${app.security.pagination.default_pageSize}") int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "${app.security.pagination.default_sortBy}", required = false) String sortBy,
+            @RequestParam(value = "sortOrder", defaultValue = "${app.security.pagination.default_sortDirection}") String sortDir
     ) {
         return new ResponseEntity<>(employeeService.getAllUsersByProjectName(projectName,pageNo, pageSize, sortBy, sortDir), HttpStatus.OK);
     }
@@ -120,10 +116,10 @@ public class EmployeeController {
     public ResponseEntity<PagedResponseDTO<UserDTO>> getAllEmployeesByProjectNameAndEmailContains(
             @PathVariable String projectName,
             @PathVariable String email,
-            @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "${app.pagination.default_pageSize}") int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "${app.pagination.default_sortBy}", required = false) String sortBy,
-            @RequestParam(value = "sortOrder", defaultValue = "${app.pagination.default_sortDirection}") String sortDir
+            @RequestParam(value = "pageNo", defaultValue = "${app.security.pagination.default_pageNumber}") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "${app.security.pagination.default_pageSize}") int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "${app.security.pagination.default_sortBy}", required = false) String sortBy,
+            @RequestParam(value = "sortOrder", defaultValue = "${app.security.pagination.default_sortDirection}") String sortDir
     ) {
 
         return new ResponseEntity<>(employeeService.getAllUsersByProjectNameAndEmailContains(projectName,email,pageNo,pageSize,sortBy,sortDir), HttpStatus.OK);

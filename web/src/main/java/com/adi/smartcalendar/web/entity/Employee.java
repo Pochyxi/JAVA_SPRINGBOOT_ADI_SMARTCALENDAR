@@ -1,6 +1,5 @@
 package com.adi.smartcalendar.web.entity;
 
-import com.adi.smartcalendar.security.models.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,7 +19,8 @@ import java.util.Set;
 public class Employee {
 
     @Id
-    private Long id;
+    @Column (name="userId")
+    private Long userId;
 
     @Column(name="employee_code")
     private String employeeCode;
@@ -44,8 +44,6 @@ public class Employee {
 
     @Temporal(TemporalType.DATE)
     private LocalDate blockedTo;
-
-    private Long userId;
 
     @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH })
     @JoinColumn

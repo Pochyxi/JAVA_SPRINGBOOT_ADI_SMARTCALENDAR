@@ -12,18 +12,18 @@ import java.util.Set;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
 
-    Set<Reservation> findByEmployeeId(Long employeeId);
+    Set<Reservation> findByEmployeeUserId( Long employeeId);
 
     Set<Reservation> findByOfficeId(Long officeId);
 
     Set<Reservation> findByClientId(Long clientId);
 
-    Optional<Reservation> findByEmployeeIdAndCalendarId(Long employeeId, String calendarId);
+    Optional<Reservation> findByEmployeeUserIdAndCalendarId( Long employeeId, String calendarId);
 
-    List<Reservation> findByCalendarMonthAndCalendarYearAndEmployeeIdOrderByCalendarDayAsc(int month, int year, Long employeeId);
+    List<Reservation> findByCalendarMonthAndCalendarYearAndEmployeeUserIdOrderByCalendarDayAsc( int month, int year, Long employeeId);
 
     List<Reservation> findByCalendarMonthAndCalendarYear(int month, int year);
 
-    List<Reservation> findByEmployeeIdAndCalendarMonthAndCalendarDay( Long employee_id, Integer calendar_month, Integer calendar_day );
+    List<Reservation> findByEmployeeUserIdAndCalendarMonthAndCalendarDay( Long employee_id, Integer calendar_month, Integer calendar_day );
 
    }

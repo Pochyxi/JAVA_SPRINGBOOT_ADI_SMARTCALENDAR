@@ -6,7 +6,6 @@ import com.adi.smartcalendar.security.dto.UserDTOInternal;
 import com.adi.smartcalendar.security.enumerated.PermissionList;
 import com.adi.smartcalendar.security.exception.ErrorCodeList;
 import com.adi.smartcalendar.security.exception.appException;
-import com.adi.smartcalendar.security.models.Profile;
 import com.adi.smartcalendar.security.service.UserService;
 import com.adi.smartcalendar.web.dto.ReservationDTO;
 import com.adi.smartcalendar.web.dto.smartMonthPlanDto.MassivePrenotationDTO;
@@ -203,7 +202,7 @@ public class ReservationServiceImpl implements ReservationService {
                         profilePermission.getPermissionName(),
                         PermissionList.RESERVATION.name() ) && profilePermission.getValueDelete() == 1 );
 
-        boolean hasSameId = Objects.equals( reservation.getEmployee().getId(), user.getId() );
+        boolean hasSameId = Objects.equals( reservation.getEmployee().getUserId(), user.getId() );
 
         boolean canDelete = hasDeletePermission || hasSameId;
 
@@ -219,7 +218,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void deleteReservationByEmployeeIdAndCalendarId( Long employeeId, String calendarId ) {
-        Reservation reservation = reservationRepository.findByEmployeeIdAndCalendarId( employeeId, calendarId )
+        Reservation reservation = reservationRepository.findByEmployeeUserIdAndCalendarId( employeeId, calendarId )
                 .orElseThrow( () -> new appException( HttpStatus.BAD_REQUEST, "RESERVATION" + ErrorCodeList.NF404 ) );
         deleteReservation( reservation.getId() );
 
@@ -282,7 +281,7 @@ public class ReservationServiceImpl implements ReservationService {
     //METODO CHE RESTITUISCE UNA LISTA DI PRENOTAZIONI IN BASE AL DIPENDENTE
     @Override
     public Set<ReservationDTO> getReservationsByEmployeeId( Long employeeId ) {
-        return reservationRepository.findByEmployeeId( employeeId )
+        return reservationRepository.findByEmployeeUserId( employeeId )
                 .stream().map( this::mapEntityToReservationDTO ).collect( Collectors.toSet() );
     }
 
@@ -302,7 +301,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<ReservationDTO> findByEmployeeIdAndCalendarMonthAndCalendarDay( Long employee_id, Integer calendar_month, Integer calendar_day ) {
-        return reservationRepository.findByEmployeeIdAndCalendarMonthAndCalendarDay( employee_id, calendar_month, calendar_day )
+        return reservationRepository.findByEmployeeUserIdAndCalendarMonthAndCalendarDay( employee_id, calendar_month, calendar_day )
                 .stream().map( this::mapEntityToReservationDTO ).toList();
     }
 
@@ -334,7 +333,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<ReservationDTO> getAllByMonthAndYearAndEmployeeIdOrderByDayAsc( int month, int year, Long employeeId ) {
-        return reservationRepository.findByCalendarMonthAndCalendarYearAndEmployeeIdOrderByCalendarDayAsc( month, year, employeeId )
+        return reservationRepository.findByCalendarMonthAndCalendarYearAndEmployeeUserIdOrderByCalendarDayAsc( month, year, employeeId )
                 .stream().map( this::mapEntityToReservationDTO ).toList();
     }
 
@@ -352,7 +351,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservationDTO.setOfficeId( reservation.getOffice() != null ? reservation.getOffice().getId() : null );
 
-        reservationDTO.setEmployeeId( reservation.getEmployee().getId() );
+        reservationDTO.setEmployeeId( reservation.getEmployee().getUserId() );
 
         reservationDTO.setCalendarId( reservation.getCalendar().getId() );
 

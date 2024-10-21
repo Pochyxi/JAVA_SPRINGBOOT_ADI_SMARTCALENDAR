@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class SecurityProperties {
 
     private Apikey apikey;
+    private Pagination pagination;
 
     @Setter
     @Getter
@@ -29,5 +30,14 @@ public class SecurityProperties {
 
             private String base;
         }
+    }
+
+    @Getter
+    @Setter
+    public static class Pagination {
+        private int defaultPageNumber;
+        private int defaultPageSize;
+        private String defaultSortDirection;
+        private String defaultSortBy;
     }
 }

@@ -209,7 +209,7 @@ public class UserApiServiceImpl implements UserApiService {
     @Override
     public Mono<UserDTO> findByEmail( String email ) {
         return webClient.get()
-                .uri( BASE_URI + "/email/{email}", email )
+                .uri( BASE_URI + "/findByEmail/{email}", email )
                 .retrieve()
                 .onStatus( status -> status.is4xxClientError() || status.is5xxServerError(), this::handleError )
                 .bodyToMono( UserDTO.class );

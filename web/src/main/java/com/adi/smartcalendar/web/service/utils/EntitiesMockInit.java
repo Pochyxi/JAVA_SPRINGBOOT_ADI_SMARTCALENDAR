@@ -103,8 +103,8 @@ public class EntitiesMockInit {
 
     @PostConstruct
     public void initEmployees() {
-        UserDTO userAdmin = userService.findByEmail("Adiener@axcent.com");
-        UserDTO userDario = userService.findByEmail("Dario@axcent.com");
+        UserDTO userAdmin = userService.findByEmail("Adiener@gmail.com");
+        UserDTO userDario = userService.findByEmail("dario@dad.it");
 
         linkEmployeeToUser( userAdmin.getId(), "Adiener", "Lopez Velazquez" );
         linkEmployeeToUser( userDario.getId(), "Dario", "Corrado" );
@@ -256,6 +256,7 @@ public class EntitiesMockInit {
             } else {
                 // Salviamo prima il dipendente nella lista del progetto(Set)
                 EmployeeDTO employeeDTO = new EmployeeDTO();
+
                 employeeDTO.setEmployeeCode( "AX" + userId + new Random().nextInt( 100000 ) );
                 employeeDTO.setName( name );
                 employeeDTO.setSurname( surname );

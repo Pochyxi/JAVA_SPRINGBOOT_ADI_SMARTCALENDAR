@@ -51,12 +51,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     public void createEmployee( EmployeeDTO employeeDTO ) {
         // Recupero l'utente dal database in base all'id, se non esiste viene creato un nuovo utente
-        Employee employeeFound = employeeRepository.findById( employeeDTO.getUserId() )
+        Employee employeeFound = employeeRepository.findByUserId( employeeDTO.getUserId() )
                 .orElseGet( Employee::new );
 
         // Se l'id del dipendente è diverso da null, vuol dire che esiste già un dipendente con quell'id
         // e quindi viene lanciata un'eccezione
-        if( employeeFound.getId() != null ) {
+        if( employeeFound.getUserId() != null ) {
             throw new appException(
                     HttpStatus.BAD_REQUEST,
                     ErrorCodeList.ALREADY_EXISTS );
@@ -80,7 +80,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void moveEmployeeToProject( Long projectId, Long employeeId ) {
         Project project = projectService.getProjectById( projectId );
 
-        Employee employee = employeeRepository.findById( employeeId ).orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ErrorCodeList.NF404) );
+        Employee employee = employeeRepository.findByUserId( employeeId ).orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ErrorCodeList.NF404) );
 
         // Se stiamo spostando il dipendente sullo stesso progetto
         if( Objects.equals( employee.getProject().getName(), project.getName() ) ) {
@@ -104,7 +104,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Override
     public void deleteEmployee(Long id) {
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByUserId(id)
                 .orElseThrow(() -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ ErrorCodeList.NF404));
 
         // Gestione della relazione bidirezionale
@@ -138,7 +138,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     // Ritorna null se non viene trovato
     @Override
     public Employee getEmployeeByUserId( Long userId ) {
-        Optional<Employee> employeeFound = employeeRepository.findById( userId );
+        Optional<Employee> employeeFound = employeeRepository.findByUserId( userId );
 
         return employeeFound.orElse( null );
     }
@@ -149,7 +149,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     // Questo metodo recupera un dipendente dal database in base al suo user id
     // Lancia un'eccezione se non viene trovato
     public Employee getEmployeeById( Long id ) {
-        return employeeRepository.findById( id )
+        return employeeRepository.findByUserId( id )
                 .orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ ErrorCodeList.NF404 ) );
     }
 
@@ -160,6 +160,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         UserDTO user = userService.findById( employeeDTO.getUserId() );
 
+        employee.setUserId( employeeDTO.getUserId() );
         employee.setEmployeeCode( employeeDTO.getEmployeeCode() );
         employee.setName( employeeDTO.getName() );
         employee.setSurname( employeeDTO.getSurname() );
@@ -192,7 +193,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Page<Employee> findByUserProfilePowerGreaterThanEqual( int power, Pageable page ) {
-        return employeeRepository.findByUserProfilePowerGreaterThanEqual( power, page );
+        return null;
+//        return employeeRepository.findByUserProfilePowerGreaterThanEqual( power, page );
     }
 
     @Override
@@ -203,27 +205,29 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-        Page<Employee> employeePage = employeeRepository.findByProjectName( pageable, projectName );
+//        Page<Employee> employeePage = employeeRepository.findByProjectName( pageable, projectName );
+//
+//
+//        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
+//
+//
+//        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
+//
+//        userResponseDTO.setContent( userList );
+//
+//        userResponseDTO.setPageNo( employeePage.getNumber() );
+//
+//        userResponseDTO.setPageSize( employeePage.getSize() );
+//
+//        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
+//
+//        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
+//
+//        userResponseDTO.setLast( employeePage.isLast() );
+//
+//        return userResponseDTO;
 
-
-        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
-
-
-        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-
-        userResponseDTO.setContent( userList );
-
-        userResponseDTO.setPageNo( employeePage.getNumber() );
-
-        userResponseDTO.setPageSize( employeePage.getSize() );
-
-        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
-
-        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
-
-        userResponseDTO.setLast( employeePage.isLast() );
-
-        return userResponseDTO;
+        return null;
     }
 
     @Override
@@ -234,28 +238,31 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-        Page<Employee> employeePage = employeeRepository.findByProjectNameAndUserEmailContains( pageable, projectName, userEmail );
 
+//        Page<Employee> employeePage = employeeRepository.findByProjectNameAndUserEmailContains( pageable, projectName, userEmail );
+//
+//
+//        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
+//
+//
+//
+//        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
+//
+//        userResponseDTO.setContent( userList );
+//
+//        userResponseDTO.setPageNo( employeePage.getNumber() );
+//
+//        userResponseDTO.setPageSize( employeePage.getSize() );
+//
+//        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
+//
+//        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
+//
+//        userResponseDTO.setLast( employeePage.isLast() );
+//
+//        return userResponseDTO;
 
-        List<UserDTO> userList = mapEmployeeListToUserDTOList( employeePage.getContent() );
-
-
-
-        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-
-        userResponseDTO.setContent( userList );
-
-        userResponseDTO.setPageNo( employeePage.getNumber() );
-
-        userResponseDTO.setPageSize( employeePage.getSize() );
-
-        userResponseDTO.setTotalElements( employeePage.getTotalElements() );
-
-        userResponseDTO.setTotalPages( employeePage.getTotalPages() );
-
-        userResponseDTO.setLast( employeePage.isLast() );
-
-        return userResponseDTO;
+        return null;
 
     }
 

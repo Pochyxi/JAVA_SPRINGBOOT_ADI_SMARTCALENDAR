@@ -37,7 +37,7 @@ public class ReservationSpec {
             Join<Reservation, Calendar> calendarJoin = root.join(Reservation_.CALENDAR);
 
             // Crea le condizioni
-            Predicate employeeCondition = criteriaBuilder.equal(employeeJoin.get(Employee_.ID), employeeId);
+            Predicate employeeCondition = criteriaBuilder.equal(employeeJoin.get(Employee_.USER_ID), employeeId);
             Predicate dateCondition = criteriaBuilder.equal(calendarJoin.get(Calendar_.ID), dateId);
 
             // Ritorna la condizione
