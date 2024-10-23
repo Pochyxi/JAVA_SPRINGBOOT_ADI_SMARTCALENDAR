@@ -18,6 +18,12 @@ public class MassiveGenerationController {
 
     private final MassiveGenerationService massiveGenerationService;
 
+
+    /**
+     * Generazione massiva dei Dipendenti
+     * @param massDTO DTO contenente i dati per la generazione massiva(lista di UserEmployeeDTO)
+     * @return 200 OK, oppure ResponseEntity con il DTO contenente i dati dei dipendenti generati(in caso di errore)
+     */
     @PostMapping
     @PreAuthorize("hasAuthority('USER_CREATE')")
     public ResponseEntity<MassiveGenerationDTO> generateMass( @RequestBody MassiveGenerationDTO massDTO) {

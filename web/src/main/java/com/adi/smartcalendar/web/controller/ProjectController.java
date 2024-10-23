@@ -1,6 +1,5 @@
 package com.adi.smartcalendar.web.controller;
 
-import com.adi.smartcalendar.security.SecurityProperties;
 import com.adi.smartcalendar.security.dto.PagedResponseDTO;
 import com.adi.smartcalendar.web.dto.ProjectDTO;
 import com.adi.smartcalendar.web.service.service.ProjectService;
@@ -19,35 +18,26 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    @PostMapping("/create")
-    @PreAuthorize("hasAuthority('PROJECT_CREATE') ")
-    public ResponseEntity<Void> createProject(@RequestBody ProjectDTO projectDTO) {
-        projectService.createProject(projectDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @PutMapping("/update/{id}")
-    @PreAuthorize("hasAuthority('PROJECT_UPDATE') ")
-    public ResponseEntity<ProjectDTO> modifyProject(@PathVariable("id") Long id,
-                                                    @RequestBody ProjectDTO pDTO) {
-        projectService.modifyProject(id, pDTO);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('PROJECT_DELETE') ")
-    public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
-        projectService.deleteProject(id);
-
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
+    /**
+     * GET PROJECT BY ID
+     * @param id id del progetto
+     * @return ResponseEntity con il progetto
+     */
     @GetMapping(value = "/{id}")
     @PreAuthorize("@projectAuthService.canViewProject(#id, 'PROJECT_READ')")
     public ResponseEntity<ProjectDTO> getProjectById(@PathVariable("id") Long id) {
         return new ResponseEntity<>(projectService.getProjectDTOById(id), HttpStatus.OK);
     }
 
+
+    /**
+     * GET ALL PROJECTS
+     * @param pageNo numero di pagina
+     * @param pageSize dimensione della pagina
+     * @param sortBy campo su cui ordinare
+     * @param sortDir direzione dell'ordinamento
+     * @return ResponseEntity con la lista di progetti
+     */
     @GetMapping(value = "/all")
     @PreAuthorize("hasAuthority('PROJECT_READ')")
     public ResponseEntity<PagedResponseDTO<ProjectDTO>> getAllProjects(
@@ -58,6 +48,48 @@ public class ProjectController {
 
     ) {
         return new ResponseEntity<>(projectService.getAllProjects(pageNo, pageSize, sortBy, sortDir), HttpStatus.OK);
+    }
+
+
+    /**
+     * CREATE PROJECT
+     * @param projectDTO DTO del progetto
+     * @return ResponseEntity con il progetto creato
+     */
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority('PROJECT_CREATE') ")
+    public ResponseEntity<Void> createProject(@RequestBody ProjectDTO projectDTO) {
+        projectService.createProject(projectDTO);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+
+    /**
+     * MODIFY PROJECT
+     * @param id id del progetto
+     * @param pDTO DTO del progetto
+     * @return ResponseEntity con il progetto modificato
+     */
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_UPDATE') ")
+    public ResponseEntity<ProjectDTO> modifyProject(@PathVariable("id") Long id,
+                                                    @RequestBody ProjectDTO pDTO) {
+        projectService.modifyProject(id, pDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    /**
+     * DELETE PROJECT
+     * @param id id del progetto
+     * @return ResponseEntity con OK
+     */
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_DELETE') ")
+    public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
+        projectService.deleteProject(id);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

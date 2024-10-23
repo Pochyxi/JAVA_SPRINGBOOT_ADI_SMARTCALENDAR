@@ -20,7 +20,7 @@ public class Employee {
 
     @Id
     @Column (name="userId")
-    private Long userId;
+    private Long id;
 
     @Column(name="user_profile_power")
     private int userProfilePower;

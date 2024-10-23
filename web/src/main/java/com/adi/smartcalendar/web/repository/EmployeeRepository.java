@@ -11,7 +11,7 @@ import java.util.Set;
 
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 
-    Optional<Employee> findByUserId( Long id );
+    Optional<Employee> findById( Long id );
 
     Set<Employee> findByProjectId( Long projectId );
 
@@ -23,6 +23,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
 
     Page<Employee> findByProjectNameAndUserEmailContains( Pageable pageable, String projectName, String userEmail );
 
-   void deleteByUserId(Long userId);
+   void deleteById(Long userId);
 
 }

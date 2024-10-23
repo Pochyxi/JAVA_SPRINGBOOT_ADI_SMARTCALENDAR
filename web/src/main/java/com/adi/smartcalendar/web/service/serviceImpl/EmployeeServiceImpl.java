@@ -48,12 +48,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     public EmployeeDTO createEmployee( EmployeeDTO employeeDTO ) {
         // Recupero l'utente dal database in base all'id, se non esiste viene creato un nuovo utente
-        Employee employeeFound = employeeRepository.findByUserId( employeeDTO.getUserId() )
+        Employee employeeFound = employeeRepository.findById( employeeDTO.getUserId() )
                 .orElseGet( Employee::new );
 
         // Se l'id del dipendente è diverso da null, vuol dire che esiste già un dipendente con quell'id
         // e quindi viene lanciata un'eccezione
-        if( employeeFound.getUserId() != null ) {
+        if( employeeFound.getId() != null ) {
             throw new appException(
                     HttpStatus.BAD_REQUEST,
                     ErrorCodeList.ALREADY_EXISTS );
@@ -68,7 +68,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeFound.setProject( defaultProject );
         }
 
-        employeeFound.setEmployeeCode(  "AX" + employeeFound.getUserId() + new Random().nextInt( 100000 ) );
+        employeeFound.setEmployeeCode(  "AX" + employeeFound.getId() + new Random().nextInt( 100000 ) );
 
         return mapEmployeeToDTO( employeeRepository.save( employeeFound ) );
     }
@@ -79,7 +79,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void moveEmployeeToProject( Long projectId, Long employeeId ) {
         Project project = projectService.getProjectById( projectId );
 
-        Employee employee = employeeRepository.findByUserId( employeeId ).orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ErrorCodeList.NF404) );
+        Employee employee =
+                employeeRepository.findById( employeeId ).orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,
+                        "EMPLOYEE "+ErrorCodeList.NF404) );
 
         // Se stiamo spostando il dipendente sullo stesso progetto
         if( Objects.equals( employee.getProject().getName(), project.getName() ) ) {
@@ -103,7 +105,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Override
     public void deleteEmployee(Long id) {
-        Employee employee = employeeRepository.findByUserId(id)
+        Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ ErrorCodeList.NF404));
 
         // Gestione della relazione bidirezionale
@@ -137,7 +139,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     // Ritorna null se non viene trovato
     @Override
     public Employee getEmployeeByUserId( Long userId ) {
-        Optional<Employee> employeeFound = employeeRepository.findByUserId( userId );
+        Optional<Employee> employeeFound = employeeRepository.findById( userId );
 
         return employeeFound.orElse( null );
     }
@@ -148,7 +150,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     // Questo metodo recupera un dipendente dal database in base al suo user id
     // Lancia un'eccezione se non viene trovato
     public Employee getEmployeeById( Long id ) {
-        return employeeRepository.findByUserId( id )
+        return employeeRepository.findById( id )
                 .orElseThrow( () -> new appException(HttpStatus.BAD_REQUEST,"EMPLOYEE "+ ErrorCodeList.NF404 ) );
     }
 
@@ -162,7 +164,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employee.setUserEmail( user.getEmail() );
         employee.setUserProfilePower( profile.getPower() );
-        employee.setUserId( employeeDTO.getUserId() );
+        employee.setId( employeeDTO.getUserId() );
         employee.setEmployeeCode( employeeDTO.getEmployeeCode() );
         employee.setName( employeeDTO.getName() );
         employee.setSurname( employeeDTO.getSurname() );
@@ -176,7 +178,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employee.setProject( projectAdded );
 
-        employee.setUserId( user.getId() );
+        employee.setId( user.getId() );
 
 
         return employee;
@@ -266,7 +268,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private List<UserDTO> mapEmployeeListToUserDTOList( List<Employee> employeeList ) {
         return employeeList.stream().map( (employee -> {
-            Long userId = employee.getUserId();
+            Long userId = employee.getId();
             return userService.findById( userId );
         }) ).toList();
     }
@@ -359,7 +361,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         eDTO.setBlockedTo( employee.getBlockedTo() );
 
-        eDTO.setUserId( employee.getUserId() );
+        eDTO.setUserId( employee.getId() );
 
         eDTO.setUserEmail( employee.getUserEmail() );
 
@@ -407,7 +409,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setBlockedTo( eDTO.getBlockedTo() == null ? employee.getBlockedTo() : eDTO.getBlockedTo() );
 
 
-        employee.setUserId( user.getId() );
+        employee.setId( user.getId() );
 
         Project project = projectService.getProjectByName( eDTO.getProjectName() );
 
