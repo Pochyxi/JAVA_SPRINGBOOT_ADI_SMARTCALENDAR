@@ -17,6 +17,13 @@ public class SmartMonthPlanController {
 
     private final SmartMonthPlanService smartMonthPlanService;
 
+
+    /**
+     * GET SMART MONTH PLAN V2
+     * @param month mese
+     * @param year anno
+     * @return ResponseEntity con SmartMonthPlanDTOV2
+     */
     @GetMapping(value = "/month/{month}/year/{year}/v2")
     public ResponseEntity<SmartMonthPlanDTOV2>getSmartMonthPlanDTOV2( @PathVariable int month,
                                                                       @PathVariable int year){

@@ -82,6 +82,12 @@ public class ReservationController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+
+    /**
+     * MODIFY RESERVATION
+     * @param reservationId id della prenotazione
+     * @param reservationDTO DTO della prenotazione
+     */
     @PutMapping(value = "/update/{reservationId}")
     @PreAuthorize("hasAuthority('RESERVATION_UPDATE') ")
     public ResponseEntity<Void>modifyReservation(@PathVariable Long reservationId,
@@ -90,6 +96,11 @@ public class ReservationController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+
+    /**
+     * DELETE RESERVATION
+     * @param reservationId id della prenotazione
+     */
     @DeleteMapping(value = "/delete/{reservationId}")
     public ResponseEntity<Void>deleteReservation(@PathVariable Long reservationId){
         reservationService.deleteReservation(reservationId);
